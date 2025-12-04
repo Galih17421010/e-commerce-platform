@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@stripe/react-stripe-js": "^5.4.1",
+    "@stripe/stripe-js": "^8.5.3",
+    "axios": "^1.13.2",
+    "lucide-react": "^0.555.0"
+  }
+}
