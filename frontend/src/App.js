@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { orderAPI, productAPI } from "./services/api";
+import { Search } from "lucide-react";
 
 export default function App() {
   const [products, setProducts] = useState([]);
@@ -39,6 +40,57 @@ export default function App() {
     }
   };
 
+  const categories = ['All', ...new Set(products.map(p => p.category))];
+
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(setSearchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const addToCart = (product) => {
+    const existingItem = cart.find(item => item.id === product.id);
+    if (existingItem) {
+      setCart(cart.map(item =>
+        item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item 
+      ));
+    } else {
+      setCart([...cart, { ...product, quantity: 1 }]);
+    }
+  };
+
+  const removeFromCart = (productId) => {
+    setCart(cart.filter(item => item.id !== productId));
+  };
+
+  const updateQuantity = (productId, change) => {
+    setCart(cart.map(item => {
+      if (item.id === productId) {
+        const newQuantity = item.quantity + change;
+        return newQuantity > 0 ? { ...item, quantity: newQuantity } : item;
+      }
+      return item;
+    }).filter(item => item.quantity > 0));
+  };
+
+  const toggleWishlist = (product) => {
+    if (wishlist.find(item => item.id === product.id)) {
+      setWishlist(wishlist.filter(item => item.id !== product.id));
+    } else {
+      setWishlist([...wishlist, product]);
+    }
+  };
+
+  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const shippingCost = cartTotal > 0 ? 50000 : 0;
+  const totalWithShipping = cartTotal + shippingCost;
+
+  const handleCheckout = () => {
+    if (cart.length === 0) return;
+    setCurrentView('checkout');
+    setCheckoutStep('shipping');
+  };
+
   // handle payment 
   const handlePayment = async () => {
     try {
@@ -62,5 +114,21 @@ export default function App() {
       console.error('Error creating order:', error);
       alert('Failed to create order. Please try again.');
     }
-  }
+  };
+
+  const renderProducts = () => (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="relative flex-1 w-full sm:max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <input 
+            type="text"
+            placeholder="Search products..."
+            value={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+      </div>
+    </div>
+  );
 };
